@@ -112,11 +112,18 @@ public final class Mat4x4 {
 		res.z = v.x * mat[2][0] + v.y * mat[2][1] + v.z * mat[2][2] + mat[2][3];
 		res.w = v.x * mat[3][0] + v.y * mat[3][1] + v.z * mat[3][2] + mat[3][3];
 
-		/*
-		if(w != 1 || w != 0) {
-			res.x /= w; res.y /= w; res.z /= w;
-		}
-		*/
+		return res;
+	}
+
+	public static Point3 Mul(Mat4x4 m, Point3 p) {
+		float[][] mat = m.components;
+		Point3 res = new Point3();
+
+		res.x = p.x * mat[0][0] + p.y * mat[0][1] + p.z * mat[0][2] + mat[0][3];
+		res.y = p.x * mat[1][0] + p.y * mat[1][1] + p.z * mat[1][2] + mat[1][3];
+		res.z = p.x * mat[2][0] + p.y * mat[2][1] + p.z * mat[2][2] + mat[2][3];
+		res.w = p.x * mat[3][0] + p.y * mat[3][1] + p.z * mat[3][2] + mat[3][3];
+
 		return res;
 	}
 	

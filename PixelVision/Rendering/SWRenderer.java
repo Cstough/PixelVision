@@ -1,9 +1,6 @@
 package PixelVision.Rendering;
 
 import PixelVision.Math.*;
-
-import javax.sound.sampled.Clip;
-import java.awt.image.Raster;
 import java.util.ArrayList;
 
 /*
@@ -16,6 +13,8 @@ import java.util.ArrayList;
  * ~Performs triangle clipping of triangles that go outside the screen.
  * ~abstracts the rendering of meshes
  */
+
+/*
 
 public final class SWRenderer {
 	
@@ -92,7 +91,7 @@ public final class SWRenderer {
 				RasterizeTriangle(v0, v1, v2);
 			}
 		}
-		 */
+
 
 		//create 2 arrays for the local Vertices and Triangles of our model
 		Vec3[] vertices = new Vec3[model.getMesh().GetVertexData().length];
@@ -167,4 +166,102 @@ public final class SWRenderer {
 	}
 
 
+}
+
+ */
+
+public abstract class SWRenderer {
+
+	//Renderer Global Variables
+	protected Point3 CameraPosition;
+	protected Vec3 CameraDirection;
+	protected Mat4x4 ProjectionMatrix, ViewMatrix;
+	protected Bitmap Target;
+
+	//ClipSpace Variables
+	protected ArrayList<Vertex> ClipSpaceVertices;
+	protected ArrayList<Triangle> ClipSpaceTriangles;
+
+
+	public SWRenderer() {
+		CameraPosition = new Point3();
+		CameraDirection = new Vec3(0, 0, -1);
+	}
+
+	public void SetProjectionMatrix(float FOV, float Near, float Far) {
+		ProjectionMatrix = Mat4x4.GetProjection(FOV, Near, Far);
+	}
+
+	public void SetRenderTarget(Bitmap target) {
+		Target = target;
+	}
+
+	//This function needs a Vertex[] and a transform, so passing the whole model would suffice
+	public Vertex[] WorldTransform(Model m) {
+
+		Vertex[] vertices = m.getMesh().GetVertexData().clone();
+
+		Point3 location = m.getLocation();
+		Point3 origin = m.getOrigin();
+		Point3 rotation = m.getRotation();
+		Point3 scale = m.getScale();
+
+		Mat4x4 t = Mat4x4.GetTranslation(new Vec3(location.x, location.y, location.z));
+		Mat4x4 r = Mat4x4.GetRotation(new Vec3(rotation.x, rotation.y, rotation.z));
+
+
+		Mat4x4 s = Mat4x4.GetScale(new Vec3(scale.x, scale.y, scale.z));
+
+		for(Vertex v : vertices) {
+			v.position = Mat4x4.Mul(r, v.position);
+			v.position = Mat4x4.Mul(t, v.position);
+			v.position = Mat4x4.Mul(s, v.position);
+		}
+
+		return vertices;
+	}
+
+	public void ViewMatrix(Vertex[] vertices) {
+
+	}
+
+	public void ProjectionMatrix(Vertex[] vertices) {
+		for(Vertex v : vertices) {
+			v.position = Mat4x4.Mul(ProjectionMatrix, v.position);
+		}
+	}
+
+	public void PerspectiveDivide(Vertex[] vertices) {
+	    for(Vertex v : vertices) {
+            if(v.position.w != 1 || v.position.w != 0) {
+                v.position.x /= v.position.w; v.position.y /= v.position.w; v.position.z /= v.position.w;
+            }
+        }
+    }
+
+	public boolean IsFaceVisible(Vertex a, Vertex b, Vertex c) {
+		Vec3 surfaceNormal = Vec3.Cross(Vec3.Diff(a.position.toVec3(), b.position.toVec3()), Vec3.Diff(a.position.toVec3(), c.position.toVec3()));
+		float vis = Vec3.Dot(surfaceNormal, Vec3.Diff(a.position.toVec3(), CameraPosition.toVec3()));
+		if(vis >= 0.0f){
+			return true;
+		}
+		return false;
+	}
+
+    public Point2 ScaleVertexToScreen(Point2 vert) {
+
+        vert.x += 1.0f;
+        vert.y += 1.0f;
+        vert.x *= 0.5f * (float)Target.GetWidth();
+        vert.y *= 0.5f * (float)Target.GetHeight();
+
+        return vert;
+    }
+
+    public void RasterizeTriangle(Point2 v1, Point2 v2, Point2 v3) {
+        Color c = new Color(Color.GREEN);
+        Draw.DrawLine(v1, v2, Target, c);
+        Draw.DrawLine(v1, v3, Target, c);
+        Draw.DrawLine(v2, v3, Target, c);
+    }
 }

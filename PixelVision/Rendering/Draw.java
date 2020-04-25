@@ -6,7 +6,7 @@ import PixelVision.Util;
 public final class Draw {
 	
 	//Bresenham's Line Drawing Algorithm
-	public static void DrawLine(Vec2 v1, Vec2 v2, Bitmap target, Color color) {
+	public static void DrawLine(Point2 v1, Point2 v2, Bitmap target, Color color) {
 
 		Vec2 l1 = new Vec2(v1.x, v1.y);
 		Vec2 l2 = new Vec2(v2.x, v2.y);

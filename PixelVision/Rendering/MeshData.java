@@ -2,7 +2,7 @@ package PixelVision.Rendering;
 
 import PixelVision.Math.*;
 
-final class MeshData {
+public final class MeshData {
 
     Vertex[] Vertices;
     Triangle[] Triangles;

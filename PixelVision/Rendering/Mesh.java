@@ -7,7 +7,7 @@ public class Mesh {
 	private MeshData meshData;
 	
 	private Mesh() {
-		meshData = new MeshData();
+
 	}
 
 	public static Mesh CreateFromMeshData(MeshData md) {
@@ -25,16 +25,15 @@ public class Mesh {
 	}
 	
 	public Vertex[] GetVertexData() {
-		return meshData.Vertices;
-	}
-}
 
-final class Triangle {
+		Vertex[] verts = new Vertex[meshData.Vertices.length];
 
-	int[] vertices;
+		for(int i = 0; i < verts.length; i++) {
+			Vertex v = new Vertex(meshData.Vertices[i].position);
+			verts[i] = v;
+		}
 
-	public Triangle(int a, int b, int c) {
-		Verts = new int[] {a, b, c};
+		return verts;
 	}
 }
 
