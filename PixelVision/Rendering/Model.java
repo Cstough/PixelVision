@@ -6,6 +6,7 @@ public class Model {
 
 	private Point3 location, rotation, scale, origin;
 	private Mesh mesh;
+	private Bitmap texture;
 	
 	public Model(Mesh mesh, Point3 location) {
 		this.mesh = mesh;
@@ -15,7 +16,9 @@ public class Model {
 		scale = new Point3(1, 1, 1);
 	}
 
-
+	public void SetTexture(Bitmap texture) {
+		this.texture = texture;
+	}
 	
 	public void Translate(Vec3 trans) {
 		location.Add(trans);

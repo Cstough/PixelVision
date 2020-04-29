@@ -25,19 +25,20 @@ public class Driver {
 class Game extends Engine {
 
     SimpleRenderer renderer;
-    Model cube;
+    Model cube, cube2;
 
     public Game() {
-        SetScreenSize(200, 200, 4);
-        SetTitle("Engine Implementation!");
+        SetScreenSize(256, 256, 3);
         SetClearColor(Color.BLACK);
-        SetFramesPerSecond(30.0f);
-        SetUpdatesPerSecond(30.0f);
+        SetFramesPerSecond(60.0f);
+        SetUpdatesPerSecond(60.0f);
     }
 
     @Override
     public void Init() {
-        cube = LoadModelFromOBJ("Monkey.obj");
+        SetTitle("Engine Implementation!");
+
+        cube = LoadModelFromOBJ("donut.obj");
 
         cube.Translate(new Vec3(0, 0, -2f));
         cube.Rotate(new Vec3(0, 0, (float) Math.toRadians(180f)));
@@ -52,16 +53,16 @@ class Game extends Engine {
         super.Update();
 
         if(InputScanner.GetKeyDown(KeyEvent.VK_W)) {
-            cube.Rotate(new Vec3(-.01f, 0, 0));
+            cube.Rotate(new Vec3(-.05f, 0, 0));
         }
         if(InputScanner.GetKeyDown(KeyEvent.VK_A)) {
-            cube.Rotate(new Vec3(0, .01f, 0));
+            cube.Rotate(new Vec3(0, 0, 0.05f));
         }
         if(InputScanner.GetKeyDown(KeyEvent.VK_S)) {
-            cube.Rotate(new Vec3(.01f, 0, 0));
+            cube.Rotate(new Vec3(.05f, 0, 0));
         }
         if(InputScanner.GetKeyDown(KeyEvent.VK_D)) {
-            cube.Rotate(new Vec3(0, -.01f, 0));
+            cube.Rotate(new Vec3(0, 0, -0.05f));
         }
     }
 

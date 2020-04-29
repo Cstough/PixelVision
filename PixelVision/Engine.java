@@ -19,7 +19,7 @@ public abstract class Engine {
 	
 	public void Start() throws InterruptedException {
 		
-		window = new Window(Width, Height, Scale, Title);
+		window = new Window(Width, Height, Scale, "New Window");
 		target = window.GetFrameBuffer();
 		timer = new Timer();
 		running = true;
@@ -84,6 +84,7 @@ public abstract class Engine {
 	
 	public void SetTitle(String Title) {
 		this.Title = Title;
+		window.setName(this.Title);
 	}
 	
 	public void SetClearColor(byte[] color) {

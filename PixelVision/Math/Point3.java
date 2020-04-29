@@ -18,6 +18,12 @@ public final class Point3 {
         w = 0;
     }
 
+    public Point3(Point2 xy, float z) {
+        x = xy.x;
+        y = xy.y;
+        this.z = z;
+    }
+
     public void Add(Vec3 v) {
         x += v.x;
         y += v.y;
@@ -34,5 +40,9 @@ public final class Point3 {
 
     public Vec3 toVec3() {
         return new Vec3(x, y, z);
+    }
+
+    public String toString() {
+        return "x: " + x + " y: " + y + " z: " + z;
     }
 }

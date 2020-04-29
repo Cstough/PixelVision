@@ -1,9 +1,9 @@
 package PixelVision;
 
-import PixelVision.Math.Point2;
-import PixelVision.Math.Vec2;
+import PixelVision.Math.*;
 import PixelVision.Rendering.*;
 
+import java.security.SecureClassLoader;
 import java.util.ArrayList;
 
 public class SimpleRenderer extends SWRenderer {
@@ -22,6 +22,7 @@ public class SimpleRenderer extends SWRenderer {
     }
 
     public void Update() {
+        ClearZBuffer();
         for(Model m : Models) {
             RenderModel(m);
         }
@@ -35,7 +36,10 @@ public class SimpleRenderer extends SWRenderer {
 
         PerspectiveDivide(modelVerts);
 
-        Point2[] screenVerts = new Point2[modelVerts.length];
+        for(Vertex v : modelVerts) {
+            ScaleVertexToScreen(v.position);
+        }
+
         Triangle[] triangles = m.getMesh().GetTriangles();
 
         for(int t = 0; t < triangles.length; t++) {
@@ -49,17 +53,15 @@ public class SimpleRenderer extends SWRenderer {
             c = modelVerts[currentTriangle.vertices[2] - 1];
 
             if(IsFaceVisible(a, b, c)){
-                Point2 p0, p1, p2;
 
-                p0 = a.position.toPoint2();
-                p1 = b.position.toPoint2();
-                p2 = c.position.toPoint2();
+                Color col = new Color(Color.YELLOW);
 
-                p0 = ScaleVertexToScreen(p0);
-                p1 = ScaleVertexToScreen(p1);
-                p2 = ScaleVertexToScreen(p2);
+                Vec3 norm = currentTriangle.vertexNormals[0];
 
-                RasterizeTriangle(p0, p1, p2);
+                norm = Mat4x4.Mul(Mat4x4.GetRotation(m.getRotation().toVec3()), norm);
+
+                col = CalculateShadeColor(col, norm);
+                FlatShadeTriangle(a, b, c, col, currentTriangle.vertexNormals[0], currentTriangle.vertexNormals[1], currentTriangle.vertexNormals[2]);
             }
         }
     }

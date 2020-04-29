@@ -1,7 +1,9 @@
 package PixelVision.Rendering;
 
 import PixelVision.Math.*;
+import PixelVision.Rendering.*;
 import java.util.ArrayList;
+import java.nio.ByteBuffer;
 
 /*
  * This class sits in an implementation of the Engine. This Object does
@@ -175,17 +177,23 @@ public abstract class SWRenderer {
 	//Renderer Global Variables
 	protected Point3 CameraPosition;
 	protected Vec3 CameraDirection;
+	protected Vec3 GlobalLightDirection;
+	protected float GlobalLightIntensity;
 	protected Mat4x4 ProjectionMatrix, ViewMatrix;
 	protected Bitmap Target;
+	protected float[][] ZBuffer;
 
 	//ClipSpace Variables
 	protected ArrayList<Vertex> ClipSpaceVertices;
 	protected ArrayList<Triangle> ClipSpaceTriangles;
 
 
+
 	public SWRenderer() {
 		CameraPosition = new Point3();
 		CameraDirection = new Vec3(0, 0, -1);
+		GlobalLightDirection = Vec3.Normalize(new Vec3(11f, -1f, -1f));
+		GlobalLightIntensity = 3.5f;
 	}
 
 	public void SetProjectionMatrix(float FOV, float Near, float Far) {
@@ -194,12 +202,13 @@ public abstract class SWRenderer {
 
 	public void SetRenderTarget(Bitmap target) {
 		Target = target;
+		ZBuffer = new float[target.GetHeight()][target.GetWidth()];
 	}
 
 	//This function needs a Vertex[] and a transform, so passing the whole model would suffice
 	public Vertex[] WorldTransform(Model m) {
 
-		Vertex[] vertices = m.getMesh().GetVertexData().clone();
+		Vertex[] vertices = m.getMesh().GetVertexData();
 
 		Point3 location = m.getLocation();
 		Point3 origin = m.getOrigin();
@@ -208,8 +217,6 @@ public abstract class SWRenderer {
 
 		Mat4x4 t = Mat4x4.GetTranslation(new Vec3(location.x, location.y, location.z));
 		Mat4x4 r = Mat4x4.GetRotation(new Vec3(rotation.x, rotation.y, rotation.z));
-
-
 		Mat4x4 s = Mat4x4.GetScale(new Vec3(scale.x, scale.y, scale.z));
 
 		for(Vertex v : vertices) {
@@ -242,26 +249,147 @@ public abstract class SWRenderer {
 	public boolean IsFaceVisible(Vertex a, Vertex b, Vertex c) {
 		Vec3 surfaceNormal = Vec3.Cross(Vec3.Diff(a.position.toVec3(), b.position.toVec3()), Vec3.Diff(a.position.toVec3(), c.position.toVec3()));
 		float vis = Vec3.Dot(surfaceNormal, Vec3.Diff(a.position.toVec3(), CameraPosition.toVec3()));
-		if(vis >= 0.0f){
+		if(vis >= -.5f){
 			return true;
 		}
 		return false;
 	}
 
-    public Point2 ScaleVertexToScreen(Point2 vert) {
+    public void ScaleVertexToScreen(Point3 vert) {
 
         vert.x += 1.0f;
         vert.y += 1.0f;
         vert.x *= 0.5f * (float)Target.GetWidth();
         vert.y *= 0.5f * (float)Target.GetHeight();
-
-        return vert;
     }
 
-    public void RasterizeTriangle(Point2 v1, Point2 v2, Point2 v3) {
-        Color c = new Color(Color.GREEN);
-        Draw.DrawLine(v1, v2, Target, c);
-        Draw.DrawLine(v1, v3, Target, c);
-        Draw.DrawLine(v2, v3, Target, c);
-    }
+    public void ClearZBuffer() {
+		for(int i = 0; i < ZBuffer.length; i++) {
+			for(int j = 0; j < ZBuffer[i].length; j++) {
+				ZBuffer[i][j] = Float.MIN_VALUE;
+			}
+		}
+	}
+
+    public void FlatShadeTriangle(Vertex a, Vertex b, Vertex c, Color col, Vec3 an, Vec3 bn, Vec3 cn) {
+
+/*
+		int minX, minY, maxX, maxY;
+
+		minX = (int)GetMin(v1.x, v2.x, v3.x);
+		minY = (int)GetMin(v1.y, v2.y, v3.y);
+		maxX = (int)GetMax(v1.x, v2.x, v3.x);
+		maxY = (int)GetMax(v1.y, v2.y, v3.y);
+
+		minX = Math.min(minX, 0);
+		minY = Math.min(minY, 0);
+		maxX = Math.max(maxX, Target.GetWidth() - 1);
+		maxY = Math.max(maxY, Target.GetHeight() - 1);
+
+		Point2 p = new Point2(0, 0);
+
+		for(p.y = minY; p.y <= maxY; p.y++) {
+			for(p.x = minX; p.x <= maxX; p.x++) {
+				float w0 = Orient2(v2, v3, p);
+				float w1 = Orient2(v3, v1, p);
+				float w2 = Orient2(v1, v2, p);
+
+				if(w0 >= 0 && w1 >= 0 && w2 >= 0) {
+					Target.SetPixel((int)p.x, (int)p.y, c);
+				}
+			}
+		}
+*/
+
+		Point2 v1, v2, v3;
+
+		v1 = a.position.toPoint2();
+		v2 = b.position.toPoint2();
+		v3 = c.position.toPoint2();
+
+		Point2 p = new Point2(0, 0);
+
+		int minX = (int) GetMin(v1.x, v2.x, v3.x);
+		int maxX = (int) GetMax(v1.x, v2.x, v3.x);
+		int minY = (int) GetMin(v1.y, v2.y, v3.y);
+		int maxY = (int) GetMax(v1.y, v2.y, v3.y);
+
+		minX = Math.max(minX, 0);
+		minY = Math.max(minY, 0);
+		maxX = Math.min(maxX, Target.GetWidth() - 1);
+		maxY = Math.min(maxY, Target.GetHeight() - 1);
+
+		for(int i = minY; i <= maxY; i++) {
+			for (int j = minX; j <= maxX; j++) {
+				p.x = j + 0.5f;
+				p.y = i + 0.5f;
+
+				float Area = GetTriArea(v1, v2, v3);
+
+				float w0 = Orient2(v2, v3, p);
+				float w1 = Orient2(v3, v1, p);
+				float w2 = Orient2(v1, v2, p);
+
+				if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
+
+					w0 /= Area;
+					w1 /= Area;
+					w2 /= Area;
+
+					float z = 1 / (w0 * a.position.w + w1 * b.position.w + w2 * c.position.w);
+
+					if(ZBuffer[j][i] < z) {
+						Target.SetPixel(j, i, col);
+						ZBuffer[j][i] = z;
+					}
+				}
+			}
+		}
+	}
+
+	protected float GetMin(float a, float b, float c) {
+		return Math.min(a, Math.min(b, c));
+	}
+
+	protected float GetMax(float a, float b, float c) {
+		return Math.max(a, Math.max(b, c));
+	}
+
+	protected float Orient2(Point2 a, Point2 b, Point2 c) {
+		return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+	}
+
+	protected float GetTriArea(Point2 v1, Point2 v2, Point2 v3) {
+		return (float)Math.abs(v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) * 0.5f;
+	}
+
+	protected Vec3 GetTriangleNormal(Point3 a, Point3 b, Point3 c) {
+		Vec3 ab = Vec3.Diff(b.toVec3(), a.toVec3());
+		Vec3 ac = Vec3.Diff(c.toVec3(), a.toVec3());
+		return Vec3.Normalize(Vec3.Cross(ab, ac));
+	}
+
+	protected Color CalculateShadeColor(Color c, Vec3 normal) {
+
+		byte[] comps = new byte[4];
+
+		System.arraycopy(c.GetComponents(), 0, comps, 0, 4);
+
+		ByteBuffer bb = ByteBuffer.wrap(comps);
+
+		int col = bb.getInt();
+
+		float val = Vec3.Dot(Vec3.Normalize(GlobalLightDirection), normal);
+
+		val += 1.0f; val *= GlobalLightIntensity;
+
+		col = (col & 0xffbbbbbb) << (int)val;
+
+		ByteBuffer dbuf = ByteBuffer.allocate(4);
+		dbuf.putInt(col);
+
+		comps = dbuf.array();
+
+		return new Color(comps);
+	}
 }

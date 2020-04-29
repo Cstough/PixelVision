@@ -35,6 +35,10 @@ public final class Vec3 {
 	public Vec3 Mul(float f) {
 		return new Vec3(x*f, y*f, z*f);
 	}
+
+	public static Vec3 Mul(Vec3 v, float f) {
+		return new Vec3(v.x * f, v.y * f, v.z * f);
+	}
 	
 	public static Vec3 Diff(Vec3 dest, Vec3 orig) {
 		return new Vec3(dest.x - orig.x, dest.y - orig.y, dest.z - orig.z);

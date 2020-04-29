@@ -21,7 +21,14 @@ public class Mesh {
 	}
 	
 	public Triangle[] GetTriangles() {
-		return meshData.Triangles;
+		Triangle[] tris = new Triangle[meshData.Triangles.length];
+
+		for(int i = 0; i < tris.length; i++) {
+			Triangle t = meshData.Triangles[i];
+			tris[i] = new Triangle(t.vertices, t.textCoords, t.vertexNormals);
+		}
+
+		return tris;
 	}
 	
 	public Vertex[] GetVertexData() {
