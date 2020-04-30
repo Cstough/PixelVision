@@ -13,4 +13,4 @@ Here is a short timeline of production up to the current stage:
 
 ![](Development/affineTextures.gif)
 
-![](Development/gouraudShading.gif)
+![](Development/gouraudMonkey.gif)
