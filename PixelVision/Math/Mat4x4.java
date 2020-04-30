@@ -39,6 +39,35 @@ public final class Mat4x4 {
 		
 		return proj;
 	}
+
+	public static Mat4x4 GetView(){
+		return null;
+	}
+
+	public static Mat4x4 GetLookAt(Point3 from, Point3 to) {
+		Vec3 forward = Vec3.Diff(to, from);
+		forward = Vec3.Normalize(forward);
+		Vec3 right = Vec3.Cross(new Vec3(0, 1, 0), forward);
+		right = Vec3.Normalize(right);
+		Vec3 up = Vec3.Cross(forward, right);
+
+		Mat4x4 lookAt = Mat4x4.GetIdentity();
+
+		lookAt.components[0][0] = right.x;
+		lookAt.components[0][1] = right.y;
+		lookAt.components[0][2] = right.z;
+		lookAt.components[1][0] = up.x;
+		lookAt.components[1][1] = up.y;
+		lookAt.components[1][2] = up.z;
+		lookAt.components[2][0] = forward.x;
+		lookAt.components[2][1] = forward.y;
+		lookAt.components[2][2] = forward.z;
+		lookAt.components[3][0] = from.x;
+		lookAt.components[3][1] = from.y;
+		lookAt.components[3][2] = from.z;
+
+		return lookAt;
+	}
 	
 	public static Mat4x4 GetOrthographic() {
 		return null;

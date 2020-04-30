@@ -1,5 +1,10 @@
 package PixelVision.Rendering;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
 public class Bitmap {
 	
 	private int width, height;
@@ -38,6 +43,40 @@ public class Bitmap {
 			components[index + 2] = colorComponents[2];
 			components[index + 3] = colorComponents[3];
 		}
+	}
+
+	public Color GetPixel(int x, int y) {
+		int index = ((y * width) + x) * 4;
+		return new Color(new byte[] {
+				components[index + 3],
+				components[index + 2],
+				components[index + 1],
+				components[index + 0]
+		});
+	}
+
+	public static Bitmap LoadSprite(String filename) {
+		BufferedImage image = null;
+		Bitmap spr = null;
+		try {
+			image = ImageIO.read(new File(filename));
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		spr = new Bitmap(image.getWidth(), image.getHeight());
+		for(int i = 0; i < spr.GetHeight(); i++) {
+			for(int j = 0; j < spr.GetWidth(); j++) {
+				int colorint = image.getRGB(j, i);
+				byte[] bytecolor = new byte[] {
+						(byte)(colorint >> 0),
+						(byte)(colorint >> 8),
+						(byte)(colorint >> 16),
+						(byte)(colorint >> 24)
+				};
+				spr.SetPixel(j, i, new Color(bytecolor));
+			}
+		}
+		return spr;
 	}
 	
 	public int GetWidth() {

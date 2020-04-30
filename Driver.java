@@ -1,4 +1,6 @@
 import PixelVision.*;
+import PixelVision.Math.Mat4x4;
+import PixelVision.Math.Point3;
 import PixelVision.Math.Vec3;
 import PixelVision.Rendering.Color;
 import PixelVision.Rendering.Draw;
@@ -29,19 +31,20 @@ class Game extends Engine {
 
     public Game() {
         SetScreenSize(256, 256, 3);
-        SetClearColor(Color.BLACK);
-        SetFramesPerSecond(60.0f);
-        SetUpdatesPerSecond(60.0f);
+        SetClearColor(Color.CYAN);
+        SetFramesPerSecond(20.0f);
+        SetUpdatesPerSecond(20.0f);
     }
 
     @Override
     public void Init() {
         SetTitle("Engine Implementation!");
 
-        cube = LoadModelFromOBJ("donut.obj");
+        cube = LoadModelFromOBJ("Ball.obj");
+        cube.LoadTexture("checkerBoard.png");
 
-        cube.Translate(new Vec3(0, 0, -2f));
-        cube.Rotate(new Vec3(0, 0, (float) Math.toRadians(180f)));
+        cube.Translate(new Vec3(0, 0f, -2f));
+        cube.Rotate(new Vec3((float)Math.toRadians(-90f), 0, 0));
 
         renderer = new SimpleRenderer(GetTarget());
 
@@ -52,18 +55,7 @@ class Game extends Engine {
     public void Update() {
         super.Update();
 
-        if(InputScanner.GetKeyDown(KeyEvent.VK_W)) {
-            cube.Rotate(new Vec3(-.05f, 0, 0));
-        }
-        if(InputScanner.GetKeyDown(KeyEvent.VK_A)) {
-            cube.Rotate(new Vec3(0, 0, 0.05f));
-        }
-        if(InputScanner.GetKeyDown(KeyEvent.VK_S)) {
-            cube.Rotate(new Vec3(.05f, 0, 0));
-        }
-        if(InputScanner.GetKeyDown(KeyEvent.VK_D)) {
-            cube.Rotate(new Vec3(0, 0, -0.05f));
-        }
+        cube.Rotate(new Vec3(0.05f, 0.05f, 0.05f));
     }
 
     @Override

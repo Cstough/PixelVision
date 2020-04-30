@@ -14,10 +14,7 @@ public class Model {
 		rotation = new Point3();
 		origin = new Point3();
 		scale = new Point3(1, 1, 1);
-	}
-
-	public void SetTexture(Bitmap texture) {
-		this.texture = texture;
+		texture = Bitmap.LoadSprite("checkerBoard.png");
 	}
 	
 	public void Translate(Vec3 trans) {
@@ -30,6 +27,10 @@ public class Model {
 	
 	public void Scale(Vec3 scale) {
 		this.scale.Add(scale);
+	}
+
+	public void LoadTexture(String texturePath) {
+		texture = Bitmap.LoadSprite(texturePath);
 	}
 	
 	public Mesh getMesh() {
@@ -50,5 +51,9 @@ public class Model {
 	
 	public Point3 getOrigin() {
 		return origin;
+	}
+
+	public Bitmap getTexture() {
+		return texture;
 	}
 }

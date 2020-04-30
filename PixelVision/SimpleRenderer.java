@@ -34,6 +34,8 @@ public class SimpleRenderer extends SWRenderer {
 
         ProjectionMatrix(modelVerts);
 
+        //modelVerts = ViewMatrix(modelVerts, m);
+
         PerspectiveDivide(modelVerts);
 
         for(Vertex v : modelVerts) {
@@ -54,14 +56,13 @@ public class SimpleRenderer extends SWRenderer {
 
             if(IsFaceVisible(a, b, c)){
 
-                Color col = new Color(Color.YELLOW);
+                Vec3[] norms = new Vec3[]{currentTriangle.vertexNormals[0], currentTriangle.vertexNormals[1], currentTriangle.vertexNormals[2]};
 
-                Vec3 norm = currentTriangle.vertexNormals[0];
+                for(int i = 0; i < 3; i++) {
+                    norms[i] = Mat4x4.Mul(Mat4x4.GetRotation(m.getRotation().toVec3()), norms[i]);
+                }
 
-                norm = Mat4x4.Mul(Mat4x4.GetRotation(m.getRotation().toVec3()), norm);
-
-                col = CalculateShadeColor(col, norm);
-                FlatShadeTriangle(a, b, c, col, currentTriangle.vertexNormals[0], currentTriangle.vertexNormals[1], currentTriangle.vertexNormals[2]);
+                FlatShadeTriangle(a, b, c, currentTriangle.textCoords[0], currentTriangle.textCoords[1], currentTriangle.textCoords[2], m.getTexture(), norms);
             }
         }
     }

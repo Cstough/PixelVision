@@ -178,7 +178,6 @@ public abstract class SWRenderer {
 	protected Point3 CameraPosition;
 	protected Vec3 CameraDirection;
 	protected Vec3 GlobalLightDirection;
-	protected float GlobalLightIntensity;
 	protected Mat4x4 ProjectionMatrix, ViewMatrix;
 	protected Bitmap Target;
 	protected float[][] ZBuffer;
@@ -190,19 +189,38 @@ public abstract class SWRenderer {
 
 
 	public SWRenderer() {
-		CameraPosition = new Point3();
+		CameraPosition = new Point3(0, 0, 0);
 		CameraDirection = new Vec3(0, 0, -1);
-		GlobalLightDirection = Vec3.Normalize(new Vec3(11f, -1f, -1f));
-		GlobalLightIntensity = 3.5f;
+		GlobalLightDirection = Vec3.Normalize(new Vec3(-1f, -1f, -1f));
 	}
 
 	public void SetProjectionMatrix(float FOV, float Near, float Far) {
 		ProjectionMatrix = Mat4x4.GetProjection(FOV, Near, Far);
 	}
 
+	public void SetViewMatrix(Mat4x4 view) {
+		ViewMatrix = view;
+	}
+
 	public void SetRenderTarget(Bitmap target) {
 		Target = target;
 		ZBuffer = new float[target.GetHeight()][target.GetWidth()];
+	}
+
+	public void SetCameraPosition(Point3 pos) {
+		CameraPosition = pos;
+	}
+
+	public Point3 GetCameraPosition() {
+		return CameraPosition;
+	}
+
+	public void SetCameraRotation(Vec3 rot) {
+		CameraDirection = rot;
+	}
+
+	public Vec3 GetCameraRotation() {
+		return CameraDirection;
 	}
 
 	//This function needs a Vertex[] and a transform, so passing the whole model would suffice
@@ -228,8 +246,17 @@ public abstract class SWRenderer {
 		return vertices;
 	}
 
-	public void ViewMatrix(Vertex[] vertices) {
+	public Vertex[] ViewMatrix(Vertex[] vertices, Model m) {
 
+		Mat4x4 t = Mat4x4.GetTranslation(Vec3.Mul(m.getLocation().toVec3(), -1f));
+		Mat4x4 r = Mat4x4.GetRotation(Vec3.Mul(m.getRotation().toVec3(), -1f));
+
+		for(Vertex v : vertices) {
+			v.position = Mat4x4.Mul(t, v.position);
+			v.position = Mat4x4.Mul(r, v.position);
+		}
+
+		return vertices;
 	}
 
 	public void ProjectionMatrix(Vertex[] vertices) {
@@ -249,7 +276,7 @@ public abstract class SWRenderer {
 	public boolean IsFaceVisible(Vertex a, Vertex b, Vertex c) {
 		Vec3 surfaceNormal = Vec3.Cross(Vec3.Diff(a.position.toVec3(), b.position.toVec3()), Vec3.Diff(a.position.toVec3(), c.position.toVec3()));
 		float vis = Vec3.Dot(surfaceNormal, Vec3.Diff(a.position.toVec3(), CameraPosition.toVec3()));
-		if(vis >= -.5f){
+		if(vis > 0f){
 			return true;
 		}
 		return false;
@@ -271,43 +298,17 @@ public abstract class SWRenderer {
 		}
 	}
 
-    public void FlatShadeTriangle(Vertex a, Vertex b, Vertex c, Color col, Vec3 an, Vec3 bn, Vec3 cn) {
-
-/*
-		int minX, minY, maxX, maxY;
-
-		minX = (int)GetMin(v1.x, v2.x, v3.x);
-		minY = (int)GetMin(v1.y, v2.y, v3.y);
-		maxX = (int)GetMax(v1.x, v2.x, v3.x);
-		maxY = (int)GetMax(v1.y, v2.y, v3.y);
-
-		minX = Math.min(minX, 0);
-		minY = Math.min(minY, 0);
-		maxX = Math.max(maxX, Target.GetWidth() - 1);
-		maxY = Math.max(maxY, Target.GetHeight() - 1);
-
-		Point2 p = new Point2(0, 0);
-
-		for(p.y = minY; p.y <= maxY; p.y++) {
-			for(p.x = minX; p.x <= maxX; p.x++) {
-				float w0 = Orient2(v2, v3, p);
-				float w1 = Orient2(v3, v1, p);
-				float w2 = Orient2(v1, v2, p);
-
-				if(w0 >= 0 && w1 >= 0 && w2 >= 0) {
-					Target.SetPixel((int)p.x, (int)p.y, c);
-				}
-			}
-		}
-*/
+    public void FlatShadeTriangle(Vertex a, Vertex b, Vertex c, Point2 at, Point2 bt, Point2 ct, Bitmap texture, Vec3[] vNorms) {
 
 		Point2 v1, v2, v3;
+		Point2 p = new Point2(0, 0);
+		float Area;
+		float w0, w1, w2;
+		float s, t;
 
 		v1 = a.position.toPoint2();
 		v2 = b.position.toPoint2();
 		v3 = c.position.toPoint2();
-
-		Point2 p = new Point2(0, 0);
 
 		int minX = (int) GetMin(v1.x, v2.x, v3.x);
 		int maxX = (int) GetMax(v1.x, v2.x, v3.x);
@@ -321,14 +322,15 @@ public abstract class SWRenderer {
 
 		for(int i = minY; i <= maxY; i++) {
 			for (int j = minX; j <= maxX; j++) {
+
 				p.x = j + 0.5f;
 				p.y = i + 0.5f;
 
-				float Area = GetTriArea(v1, v2, v3);
+				Area = GetTriArea(v1, v2, v3);
 
-				float w0 = Orient2(v2, v3, p);
-				float w1 = Orient2(v3, v1, p);
-				float w2 = Orient2(v1, v2, p);
+				w0 = Orient2(v2, v3, p);
+				w1 = Orient2(v3, v1, p);
+				w2 = Orient2(v1, v2, p);
 
 				if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
 
@@ -336,9 +338,25 @@ public abstract class SWRenderer {
 					w1 /= Area;
 					w2 /= Area;
 
-					float z = 1 / (w0 * a.position.w + w1 * b.position.w + w2 * c.position.w);
+					float z = 1 / (w0 * (a.position.w) + w1 * (b.position.w) + w2 * (c.position.w));
 
 					if(ZBuffer[j][i] < z) {
+
+						s = w0 * at.x + w1 * bt.x + w2 * ct.x;
+						t = w0 * at.y + w1 * bt.y + w2 * ct.y;
+
+						Color col = texture.GetPixel((int)(s*texture.GetWidth() / 2), (int)(t*texture.GetHeight() / 2));
+
+						Vec3 norm = new Vec3();
+
+						norm.x = w0 * vNorms[0].x + w1 * vNorms[1].x + w2 * vNorms[2].x;
+						norm.y = w0 * vNorms[0].y + w1 * vNorms[1].y + w2 * vNorms[2].y;
+						norm.z = w0 * vNorms[0].z + w1 * vNorms[1].z + w2 * vNorms[2].z;
+
+						norm = Vec3.Normalize(norm);
+
+						col = CalculateShadeColor(col, norm);
+
 						Target.SetPixel(j, i, col);
 						ZBuffer[j][i] = z;
 					}
@@ -365,30 +383,23 @@ public abstract class SWRenderer {
 
 	protected Vec3 GetTriangleNormal(Point3 a, Point3 b, Point3 c) {
 		Vec3 ab = Vec3.Diff(b.toVec3(), a.toVec3());
-		Vec3 ac = Vec3.Diff(c.toVec3(), a.toVec3());
-		return Vec3.Normalize(Vec3.Cross(ab, ac));
+		Vec3 bc = Vec3.Diff(c.toVec3(), b.toVec3());
+		return Vec3.Normalize(Vec3.Cross(ab, bc));
 	}
 
 	protected Color CalculateShadeColor(Color c, Vec3 normal) {
 
-		byte[] comps = new byte[4];
-
-		System.arraycopy(c.GetComponents(), 0, comps, 0, 4);
-
-		ByteBuffer bb = ByteBuffer.wrap(comps);
-
-		int col = bb.getInt();
+		byte[] comps = c.GetComponents();
 
 		float val = Vec3.Dot(Vec3.Normalize(GlobalLightDirection), normal);
 
-		val += 1.0f; val *= GlobalLightIntensity;
+		val += 1.0f;
 
-		col = (col & 0xffbbbbbb) << (int)val;
+		float perc = (val / 2f) * 255;
 
-		ByteBuffer dbuf = ByteBuffer.allocate(4);
-		dbuf.putInt(col);
-
-		comps = dbuf.array();
+		for(int i = 1; i < 4; i++) {
+			comps[i] = (byte) (comps[i] * (255 - perc));
+		}
 
 		return new Color(comps);
 	}

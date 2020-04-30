@@ -44,6 +44,10 @@ public final class Vec3 {
 		return new Vec3(dest.x - orig.x, dest.y - orig.y, dest.z - orig.z);
 	}
 
+	public static Vec3 Diff(Point3 dest, Point3 orig) {
+		return new Vec3(dest.x - orig.x, dest.y - orig.y, dest.z - orig.z);
+	}
+
 	public Vec3 Diff(Vec3 v) {
 		return new Vec3(x - v.x, y - v.y, z - v.z);
 	}
