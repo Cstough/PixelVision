@@ -47,12 +47,17 @@ public class Bitmap {
 
 	public Color GetPixel(int x, int y) {
 		int index = ((y * width) + x) * 4;
-		return new Color(new byte[] {
-				components[index + 3],
-				components[index + 2],
-				components[index + 1],
-				components[index + 0]
-		});
+
+		try {
+			return new Color(new byte[]{
+					components[index + 3],
+					components[index + 2],
+					components[index + 1],
+					components[index + 0]
+			});
+		} catch(Exception e) {
+			return new Color(Color.MAGENTA);
+		}
 	}
 
 	public static Bitmap LoadSprite(String filename) {

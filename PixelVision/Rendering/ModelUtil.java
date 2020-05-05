@@ -31,7 +31,7 @@ public abstract class ModelUtil {
             if(line == null || line.equals("") || line.startsWith("#")) { }
             else{
 
-                String[] split = line.split(" ");
+                String[] split = line.split("\\s+");
 
                 switch(split[0]) {
                     case "v":

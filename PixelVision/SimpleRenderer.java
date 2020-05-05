@@ -32,17 +32,17 @@ public class SimpleRenderer extends SWRenderer {
 
         Vertex[] modelVerts = WorldTransform(m);
 
+        ViewMatrix(modelVerts);
+
         ProjectionMatrix(modelVerts);
 
-        //modelVerts = ViewMatrix(modelVerts, m);
+        Triangle[] triangles = m.getMesh().GetTrianglesRef();
 
         PerspectiveDivide(modelVerts);
 
         for(Vertex v : modelVerts) {
             ScaleVertexToScreen(v.position);
         }
-
-        Triangle[] triangles = m.getMesh().GetTriangles();
 
         for(int t = 0; t < triangles.length; t++) {
 
@@ -54,7 +54,7 @@ public class SimpleRenderer extends SWRenderer {
             b = modelVerts[currentTriangle.vertices[1] - 1];
             c = modelVerts[currentTriangle.vertices[2] - 1];
 
-            if(IsFaceVisible(a, b, c)){
+            //if(IsFaceVisible(a, b, c)){
 
                 Vec3[] norms = new Vec3[]{currentTriangle.vertexNormals[0], currentTriangle.vertexNormals[1], currentTriangle.vertexNormals[2]};
 
@@ -63,7 +63,7 @@ public class SimpleRenderer extends SWRenderer {
                 }
 
                 FlatShadeTriangle(a, b, c, currentTriangle.textCoords[0], currentTriangle.textCoords[1], currentTriangle.textCoords[2], m.getTexture(), norms);
-            }
+            //}
         }
     }
 }

@@ -1,12 +1,7 @@
 import PixelVision.*;
-import PixelVision.Math.Mat4x4;
-import PixelVision.Math.Point3;
 import PixelVision.Math.Vec3;
 import PixelVision.Rendering.Color;
-import PixelVision.Rendering.Draw;
-import PixelVision.Math.Vec2;
 import PixelVision.Rendering.Model;
-import PixelVision.Rendering.ModelUtil;
 
 import java.awt.event.KeyEvent;
 
@@ -32,20 +27,19 @@ class Game extends Engine {
     public Game() {
         SetScreenSize(256, 256, 3);
         SetClearColor(Color.CYAN);
-        SetFramesPerSecond(20.0f);
-        SetUpdatesPerSecond(20.0f);
+        SetFramesPerSecond(15.0f);
+        SetUpdatesPerSecond(30.0f);
     }
 
     @Override
     public void Init() {
         SetTitle("Engine Implementation!");
 
-        cube = LoadModelFromOBJ("Ball.obj");
+        cube = LoadModelFromOBJ("smoothLeon.obj");
         cube.LoadTexture("checkerBoard.png");
 
-        cube.Translate(new Vec3(0, 0f, -2f));
-        cube.Rotate(new Vec3((float)Math.toRadians(-90f), 0, 0));
-
+        cube.Translate(new Vec3(0, 2f, -5));
+        cube.Rotate(new Vec3((float) Math.toRadians(-90), 0, 0));
         renderer = new SimpleRenderer(GetTarget());
 
         renderer.AddModel(cube);
@@ -55,7 +49,31 @@ class Game extends Engine {
     public void Update() {
         super.Update();
 
-        cube.Rotate(new Vec3(0.05f, 0.05f, 0.05f));
+        if(InputScanner.GetKeyDown(KeyEvent.VK_W)) {
+            renderer.MoveCameraPosition(new Vec3(0, 0, -0.05f));
+        }
+        if(InputScanner.GetKeyDown(KeyEvent.VK_A)) {
+            renderer.MoveCameraPosition(new Vec3(-0.05f, 0, 0));
+        }
+        if(InputScanner.GetKeyDown(KeyEvent.VK_S)) {
+            renderer.MoveCameraPosition(new Vec3(0, 0, 0.05f));
+        }
+        if(InputScanner.GetKeyDown(KeyEvent.VK_D)) {
+            renderer.MoveCameraPosition(new Vec3(0.05f, 0, 0));
+        }
+        if(InputScanner.GetKeyDown(KeyEvent.VK_UP)) {
+            renderer.RotateCamera(new Vec3(0.05f, 0, 0));
+        }
+        if(InputScanner.GetKeyDown(KeyEvent.VK_DOWN)) {
+            renderer.RotateCamera(new Vec3(-0.05f, 0, 0));
+        }
+        if(InputScanner.GetKeyDown(KeyEvent.VK_LEFT)) {
+            renderer.RotateCamera(new Vec3(0, -0.05f, 0));
+        }
+        if(InputScanner.GetKeyDown(KeyEvent.VK_RIGHT)) {
+            renderer.RotateCamera(new Vec3(0, 0.05f, 0));
+        }
+
     }
 
     @Override

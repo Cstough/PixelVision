@@ -4,6 +4,7 @@ import PixelVision.Math.*;
 import PixelVision.Rendering.*;
 import java.util.ArrayList;
 import java.nio.ByteBuffer;
+import java.util.Vector;
 
 /*
  * This class sits in an implementation of the Engine. This Object does
@@ -181,21 +182,16 @@ public abstract class SWRenderer {
 	protected Mat4x4 ProjectionMatrix, ViewMatrix;
 	protected Bitmap Target;
 	protected float[][] ZBuffer;
-
-	//ClipSpace Variables
-	protected ArrayList<Vertex> ClipSpaceVertices;
-	protected ArrayList<Triangle> ClipSpaceTriangles;
-
-
+	protected Frustum ViewingFrustum;
 
 	public SWRenderer() {
 		CameraPosition = new Point3(0, 0, 0);
-		CameraDirection = new Vec3(0, 0, -1);
+		CameraDirection = new Vec3(0, 0, 0);
 		GlobalLightDirection = Vec3.Normalize(new Vec3(-1f, -1f, -1f));
 	}
 
 	public void SetProjectionMatrix(float FOV, float Near, float Far) {
-		ProjectionMatrix = Mat4x4.GetProjection(FOV, Near, Far);
+		ProjectionMatrix = Mat4x4.GetProjection(90f, Target.GetWidth() / Target.GetHeight(), Near, Far);
 	}
 
 	public void SetViewMatrix(Mat4x4 view) {
@@ -204,11 +200,15 @@ public abstract class SWRenderer {
 
 	public void SetRenderTarget(Bitmap target) {
 		Target = target;
-		ZBuffer = new float[target.GetHeight()][target.GetWidth()];
+		ZBuffer = new float[target.GetWidth()][target.GetHeight()];
 	}
 
 	public void SetCameraPosition(Point3 pos) {
 		CameraPosition = pos;
+	}
+
+	public void MoveCameraPosition(Vec3 move) {
+		CameraPosition.Add(move);
 	}
 
 	public Point3 GetCameraPosition() {
@@ -223,10 +223,14 @@ public abstract class SWRenderer {
 		return CameraDirection;
 	}
 
+	public void RotateCamera(Vec3 rot) {
+		CameraDirection.Add(rot);
+	}
+
 	//This function needs a Vertex[] and a transform, so passing the whole model would suffice
 	public Vertex[] WorldTransform(Model m) {
 
-		Vertex[] vertices = m.getMesh().GetVertexData();
+		Vertex[] vertices = m.getMesh().GetVertexDataClone();
 
 		Point3 location = m.getLocation();
 		Point3 origin = m.getOrigin();
@@ -246,17 +250,19 @@ public abstract class SWRenderer {
 		return vertices;
 	}
 
-	public Vertex[] ViewMatrix(Vertex[] vertices, Model m) {
+	public void ViewMatrix(Vertex[] verts) {
 
-		Mat4x4 t = Mat4x4.GetTranslation(Vec3.Mul(m.getLocation().toVec3(), -1f));
-		Mat4x4 r = Mat4x4.GetRotation(Vec3.Mul(m.getRotation().toVec3(), -1f));
+		Mat4x4 CamTrans = Mat4x4.GetTranslation(CameraPosition.toVec3());
+		Mat4x4 CamRot = Mat4x4.GetRotation(CameraDirection);
 
-		for(Vertex v : vertices) {
-			v.position = Mat4x4.Mul(t, v.position);
-			v.position = Mat4x4.Mul(r, v.position);
+		Mat4x4 Cameratransform = Mat4x4.Mul(CamTrans, CamRot);
+
+		Mat4x4 view = Mat4x4.GetView(Cameratransform);
+
+		for(Vertex v : verts) {
+			v.position = Mat4x4.Mul(view, v.position);
 		}
 
-		return vertices;
 	}
 
 	public void ProjectionMatrix(Vertex[] vertices) {
@@ -274,12 +280,13 @@ public abstract class SWRenderer {
     }
 
 	public boolean IsFaceVisible(Vertex a, Vertex b, Vertex c) {
-		Vec3 surfaceNormal = Vec3.Cross(Vec3.Diff(a.position.toVec3(), b.position.toVec3()), Vec3.Diff(a.position.toVec3(), c.position.toVec3()));
-		float vis = Vec3.Dot(surfaceNormal, Vec3.Diff(a.position.toVec3(), CameraPosition.toVec3()));
-		if(vis > 0f){
-			return true;
-		}
-		return false;
+		Vec3 surfaceNormal = GetTriangleNormal(a.position, b.position, c.position);
+
+		float vis = surfaceNormal.x * (a.position.x - CameraPosition.x)
+					+ surfaceNormal.y * (a.position.y - CameraPosition.y)
+					+ surfaceNormal.z * (a.position.z - CameraPosition.z);
+
+		return vis < 0f;
 	}
 
     public void ScaleVertexToScreen(Point3 vert) {
@@ -332,7 +339,7 @@ public abstract class SWRenderer {
 				w1 = Orient2(v3, v1, p);
 				w2 = Orient2(v1, v2, p);
 
-				if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
+				if (w0 > 0.0f && w1 > 0.0f && w2 > 0.0f) {
 
 					w0 /= Area;
 					w1 /= Area;
@@ -345,7 +352,7 @@ public abstract class SWRenderer {
 						s = w0 * at.x + w1 * bt.x + w2 * ct.x;
 						t = w0 * at.y + w1 * bt.y + w2 * ct.y;
 
-						Color col = texture.GetPixel((int)(s*texture.GetWidth() / 2), (int)(t*texture.GetHeight() / 2));
+						Color col = texture.GetPixel((int)Math.floor(s*texture.GetWidth() / 2), (int)Math.floor(t*texture.GetHeight() / 2));
 
 						Vec3 norm = new Vec3();
 
@@ -383,7 +390,7 @@ public abstract class SWRenderer {
 
 	protected Vec3 GetTriangleNormal(Point3 a, Point3 b, Point3 c) {
 		Vec3 ab = Vec3.Diff(b.toVec3(), a.toVec3());
-		Vec3 bc = Vec3.Diff(c.toVec3(), b.toVec3());
+		Vec3 bc = Vec3.Diff(b.toVec3(), c.toVec3());
 		return Vec3.Normalize(Vec3.Cross(ab, bc));
 	}
 

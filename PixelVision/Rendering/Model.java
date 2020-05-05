@@ -56,4 +56,17 @@ public class Model {
 	public Bitmap getTexture() {
 		return texture;
 	}
+
+	public Model clone() {
+
+		MeshData meshData = MeshData.CreateMeshData(mesh.GetVertexDataClone(), mesh.GetTrianglesClone());
+		Mesh newMesh = Mesh.CreateFromMeshData(meshData);
+
+		Model m = new Model(newMesh, new Point3(location.x, location.y, location.z));
+
+		m.Rotate(rotation.toVec3());
+		m.Scale(scale.toVec3());
+
+		return m;
+	}
 }

@@ -78,7 +78,11 @@ public final class Vec3 {
 		float l = (float)Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
 		return new Vec3(v.x / l, v.y / l, v.z / l);
 	}
-	
+
+	public Vec3 Normalize() {
+		return Vec3.Normalize(this);
+	}
+
 	public Vec3 GetNegative() {
 		return new Vec3(-x, -y, -z);
 	}

@@ -9,6 +9,11 @@ public final class Point2 {
         this.y = y;
     }
 
+    public Point2() {
+        x = 0.0f;
+        y = 0.0f;
+    }
+
     public static Point2 Mul(Point2 p, float f) {
         return new Point2(p.x * f, p.y * f);
     }

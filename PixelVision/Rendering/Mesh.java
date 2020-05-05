@@ -20,7 +20,7 @@ public class Mesh {
 		return meshData;
 	}
 	
-	public Triangle[] GetTriangles() {
+	public Triangle[] GetTrianglesClone() {
 		Triangle[] tris = new Triangle[meshData.Triangles.length];
 
 		for(int i = 0; i < tris.length; i++) {
@@ -30,8 +30,12 @@ public class Mesh {
 
 		return tris;
 	}
+
+	public Triangle[] GetTrianglesRef() {
+		return meshData.Triangles;
+	}
 	
-	public Vertex[] GetVertexData() {
+	public Vertex[] GetVertexDataClone() {
 
 		Vertex[] verts = new Vertex[meshData.Vertices.length];
 
@@ -41,6 +45,10 @@ public class Mesh {
 		}
 
 		return verts;
+	}
+
+	public Vertex[] GetVertexDataRef() {
+		return meshData.Vertices;
 	}
 }
 
