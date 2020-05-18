@@ -18,7 +18,8 @@ public abstract class Rasterizer {
     private Vec3 CameraRotation;
 
     public Rasterizer() {
-
+        CameraLocation = new Point3();
+        CameraRotation = new Vec3(0, 0, 0);
     }
 
     public void SetProjectionMatrix(Mat4x4 projectionMatrix) {
@@ -34,9 +35,22 @@ public abstract class Rasterizer {
         _zBuffer = new float[renderTarget.GetWidth()][renderTarget.GetHeight()];
     }
 
+    public void MoveCamera(Vec3 move) {
+        CameraLocation.Add(move);
+    }
+
+    public void RotateCamera(Vec3 rot) {
+        CameraRotation.Add(rot);
+    }
+
     //Rendering Functions
     protected boolean IsFaceVisible(Triangle triangle) {
-        return true;
+        Vec3 triNorm = Vec3.Normalize(Vec3.Cross(Vec3.Diff(triangle.vertices[1], triangle.vertices[0]), Vec3.Diff(triangle.vertices[2], triangle.vertices[1])));
+        float visibility = Vec3.Dot(triNorm, CameraRotation);
+        if(visibility < 0.0f) {
+            return true;
+        }
+        return false;
     }
 
     protected void WorldTransform(Model model) {
@@ -68,6 +82,18 @@ public abstract class Rasterizer {
 
     protected void ViewTransform(Model model) {
 
+        Mat4x4 camLoc = Mat4x4.GetTranslation(CameraLocation.toVec3());
+        Mat4x4 camRot = Mat4x4.GetRotation(CameraRotation);
+        Mat4x4 camTrans = Mat4x4.Mul(camLoc, camRot);
+        Mat4x4 viewMat = Mat4x4.GetView(camTrans);
+
+        for(MeshGroup meshGroup : model.GetMeshGroupsReference()) {
+            for(Triangle triangle : meshGroup.GetTrianglesReference()) {
+                for(int v = 0; v < triangle.vertices.length; v++) {
+                    triangle.vertices[v] = Mat4x4.Mul(viewMat, triangle.vertices[v]);
+                }
+            }
+        }
     }
 
     protected void ProjectionTransform(Model model) {

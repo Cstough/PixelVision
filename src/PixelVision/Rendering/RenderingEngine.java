@@ -39,7 +39,9 @@ public class RenderingEngine extends Rasterizer{
 
         for(int mg = 0; mg < CopyModel.GetMeshGroupsReference().length; mg++) {
             for(int tri = 0; tri < CopyModel.GetMeshGroupsReference()[mg].GetTrianglesReference().size(); tri++) {
-                RasterizeTriangle(CopyModel.GetMeshGroupsReference()[mg].GetTrianglesReference().get(tri), CopyModel.GetMeshGroupsReference()[mg]);
+                Triangle triangle = CopyModel.GetMeshGroupsReference()[mg].GetTrianglesReference().get(tri);
+                if(IsFaceVisible(triangle))
+                    RasterizeTriangle(triangle, CopyModel.GetMeshGroupsReference()[mg]);
             }
         }
     }

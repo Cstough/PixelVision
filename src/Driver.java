@@ -33,8 +33,6 @@ public class Driver extends Engine{
         renderer.SetProjectionMatrix(Mat4x4.GetProjection(90f, 1, 0.1f, 100f));
         renderer.SetGlobalLightingRotation(new Vec3(1, 1, 1));
         renderer.AddModel(model);
-
-
     }
 
     @Override
@@ -42,28 +40,23 @@ public class Driver extends Engine{
         super.Update();
 
         if(InputScanner.GetKeyDown(KeyEvent.VK_W)) {
-            model.Move(new Vec3(0, 0, -0.1f));
+            renderer.MoveCamera(new Vec3(0, 0, -1));
         }
         if(InputScanner.GetKeyDown(KeyEvent.VK_A)) {
-            model.Move(new Vec3(-0.1f, 0, 0));
+            renderer.MoveCamera(new Vec3(1, 0, 0));
         }
         if(InputScanner.GetKeyDown(KeyEvent.VK_S)) {
-            model.Move(new Vec3(0, 0, 0.1f));
+            renderer.MoveCamera(new Vec3(0, 0, 1));
         }
         if(InputScanner.GetKeyDown(KeyEvent.VK_D)) {
-            model.Move(new Vec3(0.1f, 0, 0));
+            renderer.MoveCamera(new Vec3(-1, 0, 0));
         }
-        if(InputScanner.GetKeyDown(KeyEvent.VK_Z)) {
-            model.Move(new Vec3(0, -0.3f, 0));
-        }
-        if(InputScanner.GetKeyDown(KeyEvent.VK_X)) {
-            model.Move(new Vec3(0, 0.3f, 0));
-        }
+
         if(InputScanner.GetKeyDown(KeyEvent.VK_Q)) {
-            model.Rotate(new Vec3(0, -0.1f, 0));
+            renderer.RotateCamera(new Vec3(0, -.1f, 0));
         }
         if(InputScanner.GetKeyDown(KeyEvent.VK_E)) {
-            model.Rotate(new Vec3(0, 0.1f, 0));
+            renderer.RotateCamera(new Vec3(0, .1f, 0));
         }
     }
 
