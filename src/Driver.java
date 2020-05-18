@@ -33,6 +33,8 @@ public class Driver extends Engine{
         renderer.SetProjectionMatrix(Mat4x4.GetProjection(90f, 1, 0.1f, 100f));
         renderer.SetGlobalLightingRotation(new Vec3(1, 1, 1));
         renderer.AddModel(model);
+
+
     }
 
     @Override

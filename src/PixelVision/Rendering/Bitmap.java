@@ -70,7 +70,7 @@ public class Bitmap {
 		}
 		spr = new Bitmap(image.getWidth(), image.getHeight());
 		for(int i = 0; i < spr.GetHeight(); i++) {
-			for(int j = 0; j < spr.GetWidth(); j++) {
+			for(int j = spr.GetWidth() - 1; j >= 0; j--) {
 				int colorint = image.getRGB(j, i);
 				byte[] bytecolor = new byte[] {
 						(byte)(colorint >> 16),

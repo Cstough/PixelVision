@@ -79,8 +79,8 @@ public class Model {
 
 	public Model(MeshGroup[] meshgroups) {
 		this.meshGroups = meshgroups;
-		location = new Point3(0, 0, -5);
-		rotation = new Point3((float)Math.toRadians(180f), 0, 0);
+		location = new Point3(0, 30, -45);
+		rotation = new Point3((float)Math.toRadians(180f), (float)Math.toRadians(180f), 0);
 		scaling = new Point3(1, 1, 1);
 		origin = new Point3();
 	}
